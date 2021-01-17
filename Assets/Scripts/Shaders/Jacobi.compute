@@ -1,0 +1,22 @@
+// Each #kernel tells which function to compile; you can have many kernels
+#pragma kernel JacobiScalarField
+#define NUM_THREADS 4
+
+#include "Include/SampleScalarField.hlsl"
+RWTexture3D<float> ScalarFieldToUpdate;
+
+float OneOverBeta;
+float Alpha;
+Texture3D<float> BScalarField;
+
+[numthreads(NUM_THREADS, NUM_THREADS, NUM_THREADS)]
+void JacobiScalarField (uint3 id : SV_DispatchThreadID)
+{
+    if (id.x > GridSize.x || id.y > GridSize.y || id.z > GridSize.z)
+    {
+        // don't set a point outside of the grid.
+        return;
+    }
+
+    ScalarFieldToUpdate[id] = OneOverBeta * (SampleUpDownRightLeftForwardBack(id) + Alpha * BScalarField[id]);
+}

@@ -1,0 +1,11 @@
+#pragma kernel CSMain
+#define NUM_THREADS 4
+
+Texture3D<float> GridToRestrict;
+RWTexture3D<float> RestrictedGrid;
+
+[numthreads(NUM_THREADS, NUM_THREADS, NUM_THREADS)]
+void CSMain (uint3 id : SV_DispatchThreadID)
+{
+    
+}

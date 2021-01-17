@@ -1,0 +1,19 @@
+// Each #kernel tells which function to compile; you can have many kernels
+#pragma kernel CSMain
+#define NUM_THREADS 4
+
+#include "Include/3Dto1D.hlsl"
+
+RWStructuredBuffer<float> Field;
+
+[numthreads(NUM_THREADS, NUM_THREADS, NUM_THREADS)]
+void CSMain (uint3 id : SV_DispatchThreadID)
+{
+    const uint index = GetIndex1D(id);
+    if (index >= GridSizeXByYByZ)
+    {
+        return;
+    }
+
+    Field[index] = id.x + id.y + id.z;
+}

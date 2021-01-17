@@ -1,0 +1,27 @@
+// Each #kernel tells which function to compile; you can have many kernels
+#pragma kernel Prolongate
+#define NUM_THREADS 2
+#include "Include/SampleScalarField.hlsl"
+
+RWStructuredBuffer<float> ProlongatedGrid;
+uint ProlongatedGridSizeX;
+uint ProlongatedGridSizeXByY; // GridSize.x * GridSize.y
+
+const float OneOverSix = 1.0 / 6.0;
+
+uint GetProlongatedIndex1D(uint3 index3D)
+{
+    return index3D.x + index3D.y * ProlongatedGridSizeX + index3D.z * ProlongatedGridSizeXByY;
+}
+
+[numthreads(NUM_THREADS, NUM_THREADS, NUM_THREADS)]
+void Prolongate (uint3 globalThreadIndex : SV_DispatchThreadID, uint3 groupThreadIndex : SV_GroupThreadID, uint3 groupIndex : SV_GroupID )
+{
+    const int3 directionsToSample = groupThreadIndex * 2 - 1;
+    const float base = ScalarFieldToSample[GetIndex1D(groupIndex)];
+    const float horizontalSample = SampleHorizontal(groupIndex, directionsToSample.x);
+    const float verticalSample = SampleVertical(groupIndex, directionsToSample.y);
+    const float depthSample = SampleDepth(groupIndex, directionsToSample.z);
+
+    ProlongatedGrid[GetProlongatedIndex1D(globalThreadIndex)] = (3 * base + verticalSample + horizontalSample + depthSample) / 6;
+}
