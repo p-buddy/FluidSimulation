@@ -5,20 +5,21 @@ using UnityEditor;
 using UnityEngine;
 using UnityEngine.Rendering;
 using UnityEngine.Rendering.Universal;
+using UnityEngine.Serialization;
 using Random = System.Random;
 
-public class ProlongateTest : ScriptableRendererFeature
+public class RestrictTest : ScriptableRendererFeature
 {
-    public ComputeShader prolongateCompute;
+    public ComputeShader restrictCompute;
     
-    class ProlongatePass : ScriptableRenderPass
+    class RestrictPass : ScriptableRenderPass
     {
         string profilerTag;
 
         private ComputeBuffer aBuffer;
         private ComputeBuffer bBuffer;
 
-        private ComputeShader prolongateCompute;
+        private ComputeShader restrictCompute;
         bool initialized = false;
 
         private Material material;
@@ -38,9 +39,9 @@ public class ProlongateTest : ScriptableRendererFeature
         private bool aIsProlongated = false;
         
         // Constructor
-        public ProlongatePass(string profilerTag, ComputeShader prolongateCompute)
+        public RestrictPass(string profilerTag, ComputeShader restrictCompute)
         {
-            this.prolongateCompute = prolongateCompute;
+            this.restrictCompute = restrictCompute;
             this.profilerTag = profilerTag;
             
             aBuffer = new ComputeBuffer(maxDimension * maxDimension * maxDimension, sizeof(float), ComputeBufferType.Default);
@@ -78,11 +79,11 @@ public class ProlongateTest : ScriptableRendererFeature
             int3 startingSize)
         {
             int3 endingSize = startingSize * 2;
-            ShaderSetupTask_3Dto1D setup3Dto1D = new ShaderSetupTask_3Dto1D(cmd, prolongateCompute, startingSize);
-            ShaderSetupTask_SampleScalarField setupSample = new ShaderSetupTask_SampleScalarField(setup3Dto1D, cmd, prolongateCompute, bufferToSample, 1.0f);
-            ShdaerSetupTask_Prolongate proSetup = new ShdaerSetupTask_Prolongate(setupSample, cmd, prolongateCompute, bufferToUpdate, endingSize);
+            ShaderSetupTask_3Dto1D setup3Dto1D = new ShaderSetupTask_3Dto1D(cmd, restrictCompute, startingSize);
+            ShaderSetupTask_SampleScalarField setupSample = new ShaderSetupTask_SampleScalarField(setup3Dto1D, cmd, restrictCompute, bufferToSample, 1.0f);
+            ShdaerSetupTask_Prolongate proSetup = new ShdaerSetupTask_Prolongate(setupSample, cmd, restrictCompute, bufferToUpdate, endingSize);
             
-            cmd.DispatchCompute(prolongateCompute, 0, startingSize.x, startingSize.y, startingSize.z);
+            cmd.DispatchCompute(restrictCompute, 0, startingSize.x, startingSize.y, startingSize.z);
             
             return endingSize;
         }
@@ -163,12 +164,12 @@ public class ProlongateTest : ScriptableRendererFeature
         }
     }
 
-    ProlongatePass m_ScriptablePass;
+    RestrictPass m_ScriptablePass;
 
     /// <inheritdoc/>
     public override void Create()
     {
-        m_ScriptablePass = new ProlongatePass("Prolongate Pass", prolongateCompute);
+        m_ScriptablePass = new RestrictPass("Restrict Pass", restrictCompute);
 
         // Configures where the render pass should be injected.
         m_ScriptablePass.renderPassEvent = RenderPassEvent.AfterRenderingOpaques;
